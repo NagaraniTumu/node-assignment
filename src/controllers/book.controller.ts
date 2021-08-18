@@ -1,14 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 
-import BooksService from "../services/book.service";
-import ReviewsService from "../services/review.service";
-import PublisherService from "../services/publisher.service";
+import { booksService, reviewsService, publisherService } from "../services";
 
-import HttpException from "../handlers/http.handler";
-
-import LoggingHandler from "../handlers/logging.handler";
-
-import { IBook } from "models";
+import { handler } from "../handlers";
 
 import { STATUS_CODES } from "../constants/app.constants";
 import { ERROR_MSGS, SUCCESS_MSGS } from "../constants/message.constants";
@@ -17,14 +11,15 @@ class BookController {
   public async getBookById(req: Request, res: Response, next: NextFunction) {
     const bookId = req.params.book_id;
 
-    await BooksService.getBook({ _id: bookId })
+    await booksService
+      .getBook({ _id: bookId })
       .then(async (book) => {
         if (book) {
           const results = await configureBooks([book]);
 
-          handleResponse(req, res, SUCCESS_MSGS.BooksById, results[0]);
+          handler.send(req, res, SUCCESS_MSGS.BooksById, results[0]);
         } else {
-          handleError(
+          handler.sendError(
             STATUS_CODES.NotFound,
             `${ERROR_MSGS.InvalidBookId} ${bookId}`,
             next
@@ -32,28 +27,29 @@ class BookController {
         }
       })
       .catch((err) => {
-        handleError(STATUS_CODES.InternalServerError, err, next);
+        handler.sendError(STATUS_CODES.InternalServerError, err, next);
       });
   }
 
   public async getBooks(req: Request, res: Response, next: NextFunction) {
-    await BooksService.getBooks()
+    await booksService
+      .getBooks()
       .then(async (books) => {
         const results = await configureBooks(books);
 
-        handleResponse(req, res, SUCCESS_MSGS.Books, results);
+        handler.send(req, res, SUCCESS_MSGS.Books, results);
       })
       .catch((err) => {
-        handleError(STATUS_CODES.InternalServerError, err, next);
+        handler.sendError(STATUS_CODES.InternalServerError, err, next);
       });
   }
 
   public async createBook(req: Request, res: Response, next: NextFunction) {
     const newBook = { ...req.body };
 
-    const book = await BooksService.getBook({ name: newBook.name });
+    const book = await booksService.getBook({ name: newBook.name });
     if (book) {
-      return handleError(
+      return handler.sendError(
         STATUS_CODES.Conflict,
         `${ERROR_MSGS.BookExists} ${book.name}`,
         next
@@ -61,19 +57,20 @@ class BookController {
     }
 
     if (newBook.reviews) {
-      const reviews = await ReviewsService.createReviews(newBook.reviews);
+      const reviews = await reviewsService.createReviews(newBook.reviews);
       newBook.reviews = reviews.map((review) => review._id);
     }
 
-    const publisher = await PublisherService.createPublisher(newBook.publisher);
+    const publisher = await publisherService.createPublisher(newBook.publisher);
     newBook.publisher = publisher._id;
 
-    await BooksService.createBook(newBook)
+    await booksService
+      .createBook(newBook)
       .then((doc) => {
-        handleResponse(req, res, SUCCESS_MSGS.CreateBook, doc);
+        handler.send(req, res, SUCCESS_MSGS.CreateBook, doc);
       })
       .catch((err) => {
-        handleError(STATUS_CODES.InternalServerError, err, next);
+        handler.sendError(STATUS_CODES.InternalServerError, err, next);
       });
   }
 
@@ -82,11 +79,11 @@ class BookController {
     const bookId = req.params.book_id;
 
     if (book.publisher) {
-      const publisher = await PublisherService.updatePublisher(
+      const publisher = await publisherService.updatePublisher(
         req.body.publisher
       );
       if (!publisher) {
-        handleError(
+        handler.sendError(
           STATUS_CODES.NotFound,
           `${ERROR_MSGS.InvalidPublisherId} ${book.publisher._id}`,
           next
@@ -94,46 +91,48 @@ class BookController {
       }
     }
 
-    await BooksService.updateBook(bookId, book)
+    await booksService
+      .updateBook(bookId, book)
       .then((doc) => {
         if (!doc) {
-          handleError(
+          handler.sendError(
             STATUS_CODES.NotFound,
             `${ERROR_MSGS.InvalidBookId} ${book._id}`,
             next
           );
         } else {
-          handleResponse(req, res, SUCCESS_MSGS.UpdateBook, doc);
+          handler.send(req, res, SUCCESS_MSGS.UpdateBook);
         }
       })
       .catch((err) => {
         if ((err.name = "MongoDBError") && err.code === 11000) {
-          handleError(
+          handler.sendError(
             STATUS_CODES.Conflict,
             `${ERROR_MSGS.BookExists} #${book.name}`,
             next
           );
-        } else handleError(STATUS_CODES.InternalServerError, err, next);
+        } else handler.sendError(STATUS_CODES.InternalServerError, err, next);
       });
   }
 
   public async deleteBook(req: Request, res: Response, next: NextFunction) {
     const bookId = req.params.book_id;
 
-    await BooksService.deleteBook(bookId)
+    await booksService
+      .deleteBook(bookId)
       .then((data) => {
         if (!data) {
-          handleError(
+          handler.sendError(
             STATUS_CODES.NotFound,
             `${ERROR_MSGS.InvalidBookId} ${bookId}`,
             next
           );
         } else {
-          handleResponse(req, res, SUCCESS_MSGS.DeleteBook, {});
+          handler.send(req, res, SUCCESS_MSGS.DeleteBook, {});
         }
       })
       .catch((err) => {
-        handleError(STATUS_CODES.InternalServerError, err, next);
+        handler.sendError(STATUS_CODES.InternalServerError, err, next);
       });
   }
 }
@@ -141,11 +140,11 @@ class BookController {
 const configureBooks = async (books) => {
   return await Promise.all(
     books.map(async (book) => {
-      const reviews = await ReviewsService.getReviews({
+      const reviews = await reviewsService.getReviews({
         _id: { $in: book.reviews },
       });
 
-      const publisher = await PublisherService.getPublisher(book.publisher);
+      const publisher = await publisherService.getPublisher(book.publisher);
 
       book.reviews = reviews;
       book.publisher = publisher;
@@ -154,23 +153,4 @@ const configureBooks = async (books) => {
     })
   );
 };
-
-const handleError = (status: number, message: string, next: NextFunction) => {
-  return next(new HttpException(status, message));
-};
-
-const handleResponse = (
-  req: Request,
-  res: Response,
-  message: string,
-  data?: any | IBook
-) => {
-  LoggingHandler.logSuccess(req.url, message, data);
-  res.send({
-    statusCode: STATUS_CODES.Success,
-    message: message,
-    data: data,
-  });
-};
-
-export default new BookController();
+export const bookController = new BookController();

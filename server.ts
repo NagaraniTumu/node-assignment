@@ -1,5 +1,5 @@
 import app from "./src/config/app";
-import { logger } from "./src/handlers/logger";
+import { logger } from "./src/handlers";
 
 const PORT = process.env.PORT || 3000;
 

@@ -23,4 +23,4 @@ class BooksService {
   }
 }
 
-export default new BooksService();
+export const booksService = new BooksService();

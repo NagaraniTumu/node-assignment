@@ -2,6 +2,7 @@ import * as Joi from "joi-oid";
 
 export const reqHeaderSchema = Joi.object({
   "transaction-id": Joi.string().required(),
+  authorization: Joi.string().required(),
 });
 
 export const bookReqParamsSchema = Joi.object({
@@ -34,5 +35,24 @@ export const bookUpdateReqSchema = Joi.object({
     name: Joi.string(),
     location: Joi.string(),
   }),
+});
+
+// Reviews
+export const reviewReqParamsSchema = Joi.object({
+  book_id: Joi.objectId().required(),
+  review_id: Joi.objectId().required(),
+});
+
+export const reviewPostReqSchema = Joi.array().items(
+  Joi.object({
+    reviewer: Joi.string().required(),
+    message: Joi.string().required(),
+  })
+);
+
+export const reviewUpdateReqSchema = Joi.object({
+  _id: Joi.objectId().required(),
+  reviewer: Joi.string().required(),
+  message: Joi.string().required(),
 });
 

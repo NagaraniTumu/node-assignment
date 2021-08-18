@@ -21,4 +21,4 @@ class PublisherService {
   }
 }
 
-export default new PublisherService();
+export const publisherService = new PublisherService();
