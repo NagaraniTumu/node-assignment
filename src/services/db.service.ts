@@ -24,4 +24,4 @@ class DBService {
   }
 }
 
-export default new DBService();
+export const dbService = new DBService();

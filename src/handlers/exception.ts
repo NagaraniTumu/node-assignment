@@ -1,6 +1,6 @@
 import { STATUS_CODES } from "../constants/app.constants";
 
-class HttpException extends Error {
+export class HttpException extends Error {
   statusCode: number;
   message: string;
   errorType: string;
@@ -11,5 +11,3 @@ class HttpException extends Error {
     this.errorType = `${statusCode} ${STATUS_CODES[statusCode]}`;
   }
 }
-
-export default HttpException;

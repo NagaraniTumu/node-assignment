@@ -1,60 +1,73 @@
-import { Application } from "express";
+import { Router } from "express";
 import { createValidator } from "express-joi-validation";
 
-import BookController from "../controllers/book.controller";
+import { bookController, reviewController } from "../controllers";
+
 import {
-  reqHeaderSchema,
   bookReqParamsSchema,
   bookPostReqSchema,
   bookUpdateReqSchema,
-} from "../middleware/validation.middleware";
+  reviewReqParamsSchema,
+  reviewPostReqSchema,
+  reviewUpdateReqSchema,
+} from "../models";
 
-import LoggingHandler from "../handlers/logging.handler";
+const router = Router();
+const validator = createValidator({ passError: true });
 
-class BookRoutes {
-  public validator = createValidator({ passError: true });
+router.get("", bookController.getBooks);
 
-  public route(app: Application) {
-    app.use((req, res, next) => {
-      LoggingHandler.log(req);
-      next();
-    });
+router.post("", validator.body(bookPostReqSchema), bookController.createBook);
 
-    app.get(
-      "/books",
-      this.validator.headers(reqHeaderSchema),
-      BookController.getBooks
-    );
+router.get(
+  "/:book_id",
+  validator.params(bookReqParamsSchema),
+  bookController.getBookById
+);
 
-    app.get(
-      "/books/:book_id",
-      this.validator.headers(reqHeaderSchema),
-      this.validator.params(bookReqParamsSchema),
-      BookController.getBookById
-    );
+router.put(
+  "/:book_id",
+  validator.params(bookReqParamsSchema),
+  validator.body(bookUpdateReqSchema),
+  bookController.updateBook
+);
 
-    app.post(
-      "/books",
-      this.validator.headers(reqHeaderSchema),
-      this.validator.body(bookPostReqSchema),
-      BookController.createBook
-    );
+router.delete(
+  "/:book_id",
+  validator.params(bookReqParamsSchema),
+  bookController.deleteBook
+);
 
-    app.put(
-      "/books/:book_id",
-      this.validator.headers(reqHeaderSchema),
-      this.validator.params(bookReqParamsSchema),
-      this.validator.body(bookUpdateReqSchema),
-      BookController.updateBook
-    );
+// Reviews routes
+router.get(
+  "/:book_id/reviews",
+  validator.params(bookReqParamsSchema),
+  reviewController.getReviews
+);
+router.post(
+  "/:book_id/reviews",
+  validator.params(bookReqParamsSchema),
+  validator.body(reviewPostReqSchema),
+  reviewController.createReviews
+);
 
-    app.delete(
-      "/books/:book_id",
-      this.validator.headers(reqHeaderSchema),
-      this.validator.params(bookReqParamsSchema),
-      BookController.deleteBook
-    );
-  }
-}
+router.get(
+  "/:book_id/reviews/:review_id",
+  validator.params(reviewReqParamsSchema),
+  reviewController.getReview
+);
 
-export default new BookRoutes();
+router.put(
+  "/:book_id/reviews/:review_id",
+  validator.params(reviewReqParamsSchema),
+  validator.body(reviewUpdateReqSchema),
+  reviewController.updateReview
+);
+
+router.delete(
+  "/:book_id/reviews/:review_id",
+  validator.params(reviewReqParamsSchema),
+  reviewController.deleteReview
+);
+
+export default router;
