@@ -1,10 +1,10 @@
 import * as express from "express";
+import { dbService } from "../services";
 
-import DBService from "../services/db.service";
-import errorMiddleware from "../middleware/error.middleware";
-import { logger } from "../handlers/logger";
+import { errorMiddleware } from "../middleware";
+import { handler, logger } from "../handlers";
 
-import BookRoutes from "../routes/book.routes";
+import routes from "../routes";
 
 class App {
   public app: express.Application;
@@ -12,9 +12,9 @@ class App {
   constructor() {
     this.app = express();
 
+    this.initializeMiddlewares();
     this.initializeLogging();
     this.connectToDatabase();
-    this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
   }
@@ -32,11 +32,16 @@ class App {
   }
 
   private initializeRoutes() {
-    BookRoutes.route(this.app);
+    this.app.use((req, res, next) => {
+      handler.log(req);
+      next();
+    });
+
+    this.app.use(routes);
   }
 
   private connectToDatabase() {
-    DBService.connectDB();
+    dbService.connectDB();
   }
 }
 

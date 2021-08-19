@@ -1,3 +1,16 @@
+import * as dotenv from "dotenv";
+dotenv.config();
+
+export const oktaConfig = {
+  baseUrl: process.env.HOST_URL,
+  issuer: process.env.ISSUER,
+  clientId: process.env.OKTA_CLIENT_ID,
+  clientSecret: process.env.OKTA_CLIENT_SECRET,
+  scope: process.env.SCOPE,
+  audience: process.env.AUDIENCE,
+  grantType: process.env.GRANT_TYPE,
+};
+
 export const DBCONFIG = {
   username: "rani",
   password: "rani@123",

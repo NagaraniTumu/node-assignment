@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { ValidationErrorItem } from "joi";
 
-import HttpException from "../handlers/http.handler";
-import LoggingHandler from "../handlers/logging.handler";
+import { HttpException, handler } from "../handlers";
 
 import { STATUS_CODES } from "../constants/app.constants";
 
@@ -12,7 +11,7 @@ function errorMiddleware(
   res: Response,
   next: NextFunction
 ) {
-  LoggingHandler.logError(req, error);
+  handler.logError(req, error);
 
   if (error && error.type) {
     res.status(400).send(reqValidation(error.type, error.error.details));
