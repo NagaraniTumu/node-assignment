@@ -29,7 +29,6 @@ const authMiddleWare = (req: Request, res: Response, next: NextFunction) => {
   return oktaJwtVerifier
     .verifyAccessToken(accessToken, oktaConfig.audience)
     .then((token) => {
-      console.log("jwt", token);
       req["authorization"] = token;
       next();
     })

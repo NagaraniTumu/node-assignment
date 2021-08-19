@@ -3,19 +3,12 @@ dotenv.config();
 
 export const oktaConfig = {
   baseUrl: process.env.HOST_URL,
-  issuer: `${process.env.OKTA_ORG_URL}/oauth2/default`,
+  issuer: process.env.ISSUER,
   clientId: process.env.OKTA_CLIENT_ID,
   clientSecret: process.env.OKTA_CLIENT_SECRET,
-  redirectUrl: `${process.env.HOST_URL}/authorization-code/callback`,
   scope: process.env.SCOPE,
-  callbackPath: "/authorization-code/callback",
-  audience: "api://default",
-};
-
-export const sessionOptions = {
-  secret: "this-should-be-very-random",
-  resave: true,
-  saveUninitialized: false,
+  audience: process.env.AUDIENCE,
+  grantType: process.env.GRANT_TYPE,
 };
 
 export const DBCONFIG = {
